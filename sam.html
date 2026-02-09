@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Will you be my Valentine? 💖</title>
+
+  <style>
+    :root{
+      --bg1:#fff0f6;
+      --bg2:#ffe3ed;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --muted:#6b6b6b;
+      --accent:#ff4d88;
+      --shadow: 0 14px 36px rgba(0,0,0,.14);
+      --border: 1px solid rgba(255, 255, 255, .75);
+
+      /* button colors */
+      --yesHover: rgba(255,77,136,.12);
+      --noBg: rgba(0,0,0,.06);
+      --noHover: rgba(0,0,0,.12);
+      --noRing: rgba(0,0,0,.10);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100svh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(circle at 20% 20%, var(--bg2), var(--bg1) 55%, #fff 100%);
+      overflow:hidden;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Floating hearts background */
+    .hearts{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      overflow:hidden;
+    }
+    .heart{
+      position:absolute;
+      opacity:.22;
+      animation: floatUp linear infinite;
+      filter: drop-shadow(0 6px 10px rgba(255,77,136,.16));
+      user-select:none;
+    }
+    @keyframes floatUp{
+      from { transform: translateY(110vh) translateX(0) rotate(0deg); }
+      to   { transform: translateY(-20vh) translateX(40px) rotate(25deg); }
+    }
+
+    /* Card */
+    .card{
+      position:relative;
+      z-index:1;
+      width:min(420px, 92vw);
+      background:var(--card);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(12px);
+      border:var(--border);
+      padding: 18px;
+      text-align:center;
+    }
+
+    .videoWrap{
+      width:100%;
+      aspect-ratio: 1 / 1;      /* square like reference */
+      border-radius: 20px;
+      overflow:hidden;
+      background:#000;
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: 0 10px 22px rgba(0,0,0,.12);
+      position:relative;
+      z-index:1;
+    }
+
+    video{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      filter: brightness(.95) contrast(.98);
+    }
+
+    .question{
+      margin: 14px 0 12px;
+      font-size: clamp(16px, 4.5vw, 18px);
+      color:#3f3f3f;
+      font-weight: 600;
+    }
+
+    /* IMPORTANT: Buttons region is a "playground" where NO can move,
+       so it won't ever jump in front of the video. */
+    .buttonsArea{
+      position:relative;
+      z-index:2; /* always above card background, but not on video */
+      margin-top: 2px;
+      padding-bottom: 6px;
+    }
+
+    .buttons{
+      display:flex;
+      justify-content:center;
+      gap: 14px;
+      padding: 4px 0 2px;
+      position:relative;
+    }
+
+    button{
+      border:none;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 14px;
+      cursor:pointer;
+      touch-action: manipulation;
+      transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+      line-height: 1;
+    }
+
+    /* YES stays simple */
+    #yesBtn{
+      color: #2f2f2f;
+      background: transparent;
+    }
+    #yesBtn:hover{ background: var(--yesHover); transform: translateY(-1px); }
+    #yesBtn:active{ transform: translateY(0px) scale(.98); }
+
+    /* NO gets a different highlight */
+    #noBtn{
+      color:#2f2f2f;
+      background: var(--noBg);
+      box-shadow: 0 0 0 1px var(--noRing) inset;
+      position: relative; /* starts next to yes */
+    }
+    #noBtn:hover{ background: var(--noHover); }
+    #noBtn:active{ transform: scale(.98); }
+
+    .sub{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity:.9;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.38);
+      z-index:10;
+      padding: 18px;
+    }
+    .modalBox{
+      width:min(420px, 92vw);
+      background:#fff;
+      border-radius:24px;
+      padding:20px 18px;
+      text-align:center;
+      box-shadow: 0 18px 46px rgba(0,0,0,.24);
+      position:relative;
+      overflow:hidden;
+    }
+    .modalBox h2{
+      margin: 6px 0 10px;
+      color:#b10044;
+      font-size: 26px;
+    }
+    .modalBox p{
+      margin:0 0 14px;
+      white-space:pre-wrap;
+      color:#333;
+      line-height:1.5;
+    }
+    .closeBtn{
+      border:none;
+      background: linear-gradient(135deg, #222, #444);
+      color:#fff;
+      font-weight: 800;
+      padding: 10px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      min-width: 150px;
+    }
+
+    /* Confetti */
+    .confetti{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      opacity:.9;
+    }
+    .chip{
+      position:absolute;
+      width:10px;
+      height:14px;
+      border-radius:3px;
+      animation: fall 1.25s ease-in forwards;
+    }
+    @keyframes fall{
+      from{ transform: translateY(-30px) rotate(0deg); opacity:1; }
+      to{ transform: translateY(520px) rotate(260deg); opacity:0; }
+    }
+
+    @media (max-width: 360px){
+      .buttons{ gap: 10px; }
+      button{ padding: 10px 14px; }
+      .card{ padding: 16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <main class="card" id="card">
+    <div class="videoWrap" id="videoWrap">
+      <video id="vdayVideo" autoplay muted loop playsinline preload="auto">
+        <source src="valentine.mov" type="video/mp4" />
+        <!-- fallback if your MOV is encoded as H.264 and browser wants mp4 type:
+        <source src="valentine.mov" type="video/mp4" /> -->
+      </video>
+    </div>
+
+    <div class="question" id="questionText">Will you be my valentine, zaza?</div>
+
+    <div class="buttonsArea" id="buttonsArea">
+      <div class="buttons" id="buttonsRow">
+        <button id="yesBtn" type="button">Yes</button>
+        <button id="noBtn" type="button" aria-label="No">No</button>
+      </div>
+      <div class="sub" id="subText">💗 click “No” if you dare 💗</div>
+    </div>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modalBox">
+      <div class="confetti" id="confetti"></div>
+      <h2>YAY 💞</h2>
+      <p id="finalMsg"></p>
+      <button class="closeBtn" id="closeBtn" type="button">Aww okay 😭💘</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== Customize =====
+    const THEIR_NAME = "zaza";
+    const YOUR_NAME  = "Sam";
+    const FINAL_MESSAGE = `You said YES!! 💖
+Happy Valentine’s Day, ${THEIR_NAME}.
+I’m so happy it’s you.
+— ${YOUR_NAME}`;
+
+    document.getElementById("questionText").textContent = `Will you be my valentine, ${THEIR_NAME}?`;
+    document.getElementById("finalMsg").textContent = FINAL_MESSAGE;
+
+    // Video play fallback
+    const v = document.getElementById("vdayVideo");
+    window.addEventListener("load", async () => { try { await v.play(); } catch(e) {} });
+
+    // Hearts
+    const hearts = document.getElementById("hearts");
+    const heartEmojis = ["💗","💖","💘","💕","💞","💓","🌸","✨"];
+    function spawnHeart(){
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+      h.style.left = Math.random()*100 + "vw";
+      h.style.animationDuration = (6 + Math.random()*7) + "s";
+      h.style.fontSize = (14 + Math.random()*26) + "px";
+      h.style.opacity = (0.12 + Math.random()*0.28);
+      hearts.appendChild(h);
+      setTimeout(()=> h.remove(), 14000);
+    }
+    for(let i=0;i<18;i++) setTimeout(spawnHeart, i*220);
+    setInterval(spawnHeart, 520);
+
+    // YES modal + confetti
+    const modal = document.getElementById("modal");
+    const yesBtn = document.getElementById("yesBtn");
+    const closeBtn = document.getElementById("closeBtn");
+
+    function burstConfetti(){
+      const confetti = document.getElementById("confetti");
+      confetti.innerHTML = "";
+      const colors = ["#ff4d88","#ff8fb1","#ffd1dc","#ffcc00","#7bdff2","#b2f7ef","#caffbf","#ffffff"];
+      for(let i=0;i<70;i++){
+        const c = document.createElement("div");
+        c.className = "chip";
+        c.style.left = (Math.random()*100) + "%";
+        c.style.top = (-10 - Math.random()*40) + "px";
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.animationDelay = (Math.random()*0.25) + "s";
+        confetti.appendChild(c);
+      }
+      setTimeout(()=> confetti.innerHTML = "", 1600);
+    }
+
+    yesBtn.addEventListener("click", () => {
+      modal.style.display = "grid";
+      burstConfetti();
+    });
+
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+      document.getElementById("confetti").innerHTML = "";
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+        document.getElementById("confetti").innerHTML = "";
+      }
+    });
+
+    // NO: only moves when clicked, and ONLY within the buttons area (never in front of video)
+    const noBtn = document.getElementById("noBtn");
+    const buttonsArea = document.getElementById("buttonsArea");
+    const buttonsRow = document.getElementById("buttonsRow");
+    let dodges = 0;
+
+    function moveNoWithinButtonsArea(){
+      dodges++;
+
+      // Make NO absolutely positioned within buttonsArea
+      noBtn.style.position = "absolute";
+
+      const areaRect = buttonsArea.getBoundingClientRect();
+      const rowRect = buttonsRow.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+
+      const padding = 6;
+
+      // Convert to area-local coordinates
+      const areaWidth  = areaRect.width;
+      const areaHeight = areaRect.height;
+
+      const maxX = Math.max(padding, areaWidth - btnRect.width - padding);
+      const maxY = Math.max(padding, areaHeight - btnRect.height - padding);
+
+      const rowTopInArea = rowRect.top - areaRect.top;
+      const rowBottomInArea = rowRect.bottom - areaRect.top;
+
+      const yMin = Math.max(padding, rowTopInArea - 2);
+      const yMax = Math.min(maxY, rowBottomInArea + 10);
+
+      const x = padding + Math.random() * (maxX - padding);
+      const y = yMin + Math.random() * Math.max(1, (yMax - yMin));
+
+
+      noBtn.style.left = `${x}px`;
+      noBtn.style.top  = `${y}px`;
+      noBtn.style.zIndex = 3; 
+
+      const sub = document.getElementById("subText");
+      const lines = [
+        "💗 click “No” if you dare 💗",
+        "Nope 🙈",
+        "Try again 😂",
+        "You’re persistent 😭",
+        "Just press YES 💖"
+      ];
+      sub.textContent = lines[Math.min(dodges, lines.length-1)];
+    }
+
+    noBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); // prevents any real click action
+      moveNoWithinButtonsArea();
+    });
+
+    noBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      moveNoWithinButtonsArea();
+      return false;
+    });
+
+    window.addEventListener("resize", () => {
+      noBtn.style.position = "relative";
+      noBtn.style.left = "";
+      noBtn.style.top = "";
+    });
+  </script>
+</body>
+</html>
